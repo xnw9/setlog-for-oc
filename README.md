@@ -107,6 +107,15 @@ setlog-for-oc/
 - Tests sit next to the file they test, for example `slots.test.ts` beside `slots.ts`.
 - Code used by only one feature stays in that feature. It moves to `src/components`, `hooks` or `lib` once a second feature needs it.
 
+## Commit messages
+
+Use the form `<type>[(scope)]: Summary`, for example `feat(day-view): Add slot switcher`.
+- **Types:** `scaffold`, `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`, `perf`, `build` and `ci`.
+- **Summary:** imperative and capitalised, with no full stop at the end. The whole first line is at most 72 characters.
+- **Body:** optional, after a blank line, e.g. `Co-Authored-By:` trailers.
+
+Claude Code enforces this through a hook in `.claude/settings.json` that runs `.claude/hooks/check-commit-msg.mjs`. It needs Node installed and nothing else. It only checks commits Claude makes, not commits typed in your own terminal.
+
 ## Tech stack
 
 **App:** Vite + React + TypeScript.
