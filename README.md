@@ -2,7 +2,18 @@
 
 A local-only photo log of a group's day, inspired by [Setlog](https://apps.apple.com/app/id6587576438). It is a public static website. **Everything stays in your browser, and your photos never leave your device.**
 
-> Status: planning is complete and no code has been written yet. The full spec is in [`docs/PLAN.md`](docs/PLAN.md), and the decision history is in [`docs/HANDOFF.md`](docs/HANDOFF.md).
+> Status: scaffold in progress (landing page and blank pages). The full spec is in [`docs/PLAN.md`](docs/PLAN.md), and the decision history is in [`docs/HANDOFF.md`](docs/HANDOFF.md).
+
+## Running locally
+
+You need Node 20.19+ or 22.12+.
+
+```
+npm install
+npm run dev        # dev server at http://localhost:5173
+npm run build      # type-check, then a production build in dist/
+npm run preview    # serve the production build
+```
 
 ## Plan summary
 
@@ -102,7 +113,7 @@ setlog-for-oc/
 ```
 
 **Conventions**
-- Each feature folder has only the subfolders it needs: `components/`, `hooks/` and `lib/`.
+- Each feature folder has only the subfolders it needs: `pages/` for route-level screens, plus `components/`, `hooks/` and `lib/`.
 - A feature exposes its public pieces through an `index.ts`, and other features import from there instead of reaching into deep paths.
 - Tests sit next to the file they test, for example `slots.test.ts` beside `slots.ts`.
 - Code used by only one feature stays in that feature. It moves to `src/components`, `hooks` or `lib` once a second feature needs it.
