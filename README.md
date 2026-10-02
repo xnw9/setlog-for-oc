@@ -13,7 +13,18 @@ npm install
 npm run dev        # dev server at http://localhost:5173
 npm run build      # type-check, then a production build in dist/
 npm run preview    # serve the production build
+npm run lint       # ESLint
+npm run format     # Prettier (format:check to only check)
 ```
+
+## Scaffold to-do
+
+- [ ] Tests: Vitest + React Testing Library, with a landing-page smoke test
+- [ ] Database: Dexie schema, persistent-storage request, live queries
+- [ ] Add `logId` to `Entry`, so the "log has pictures" lock check is a single query
+- [ ] Per-log themes (pastel, mint, peach, lavender), each in light and dark
+- [ ] Shared components: TextField, SegmentedControl, IconButton, Avatar, ConfirmDialog
+- [ ] CI: GitHub Actions running type-check, lint, tests and build
 
 ## Plan summary
 
