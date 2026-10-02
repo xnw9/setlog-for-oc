@@ -20,11 +20,15 @@ function extractMessage(c) {
 }
 
 function problem(msg) {
-  const lines = msg.replace(/\r/g, '').split('\n').filter((l) => !l.startsWith('#'));
+  const lines = msg
+    .replace(/\r/g, '')
+    .split('\n')
+    .filter((l) => !l.startsWith('#'));
   while (lines.length && !lines[0].trim()) lines.shift();
   const [subject = '', line2 = ''] = lines;
   if (PASS_THROUGH.test(subject)) return null;
-  if (!SUBJECT.test(subject)) return 'subject must be "<type>[(scope)]: Summary" with a capitalised summary';
+  if (!SUBJECT.test(subject))
+    return 'subject must be "<type>[(scope)]: Summary" with a capitalised summary';
   if (subject.endsWith('.')) return 'subject must not end with a period';
   if (subject.length > 72) return `subject is ${subject.length} chars (max 72)`;
   if (line2.trim()) return 'leave a blank line between the subject and the body';
@@ -34,8 +38,10 @@ function problem(msg) {
 const msg = extractMessage(cmd);
 const err = msg === null ? null : problem(msg); // no inline message (editor, -F, --no-edit): allow
 if (err) {
-  console.error(`Commit message rejected: ${err}.\n` +
-    `Format: "<type>[(scope)]: Summary" (imperative, capitalised, no trailing period, max 72 chars), ` +
-    `blank line before any body. Types: ${TYPES.replaceAll('|', ', ')}.`);
+  console.error(
+    `Commit message rejected: ${err}.\n` +
+      `Format: "<type>[(scope)]: Summary" (imperative, capitalised, no trailing period, max 72 chars), ` +
+      `blank line before any body. Types: ${TYPES.replaceAll('|', ', ')}.`,
+  );
   process.exit(2);
 }
