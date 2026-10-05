@@ -1,13 +1,16 @@
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { Button } from '../Button/Button';
 import styles from './PageLayout.module.css';
 
 interface PageLayoutProps {
   title: string;
-  /** Route for the back button. Omit both this and `onBack` to hide it. */
+  /** The level above this page. The back button is always a link here; omit to hide it. */
   backTo?: string;
-  /** Handles the back button instead of a plain link, e.g. to ask before discarding changes. */
-  onBack?: () => void;
+  /**
+   * Runs before the back link is followed. Call `event.preventDefault()` to stay on the page,
+   * e.g. to ask before discarding changes. It can't change where the link goes.
+   */
+  onBack?: (event: MouseEvent<HTMLAnchorElement>) => void;
   children?: ReactNode;
 }
 
@@ -16,16 +19,16 @@ export function PageLayout({ title, backTo, onBack, children }: PageLayoutProps)
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        {onBack ? (
-          <Button variant="ghost" className={styles.back} aria-label="Back" onClick={onBack}>
+        {backTo && (
+          <Button
+            to={backTo}
+            variant="ghost"
+            className={styles.back}
+            aria-label="Back"
+            onClick={onBack}
+          >
             ‹
           </Button>
-        ) : (
-          backTo && (
-            <Button to={backTo} variant="ghost" className={styles.back} aria-label="Back">
-              ‹
-            </Button>
-          )
         )}
         <h1 className={styles.title}>{title}</h1>
       </header>

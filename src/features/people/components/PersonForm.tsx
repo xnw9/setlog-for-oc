@@ -64,7 +64,15 @@ export function PersonForm({ title, initial, children }: PersonFormProps) {
   }
 
   return (
-    <PageLayout title={title} onBack={cancel}>
+    <PageLayout
+      title={title}
+      backTo="/people"
+      onBack={(event) => {
+        if (!dirty) return; // follow the link
+        event.preventDefault();
+        setConfirmDiscard(true);
+      }}
+    >
       <form className={styles.form} onSubmit={save} noValidate>
         <div className={styles.photo}>
           <Avatar name={trimmedName || '?'} color={color} imageBlob={avatarBlob} size={112} />

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from 'react';
 import { Link } from 'react-router';
 import styles from './Button.module.css';
 
@@ -14,7 +14,12 @@ interface CommonProps {
 
 type AsButton = CommonProps & ButtonHTMLAttributes<HTMLButtonElement> & { to?: undefined };
 /** Passing `to` renders a router link styled as a button. */
-type AsLink = CommonProps & { to: string; 'aria-label'?: string };
+type AsLink = CommonProps & {
+  to: string;
+  'aria-label'?: string;
+  /** Call `event.preventDefault()` to stay on the page instead of following the link. */
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
+};
 
 export type ButtonProps = AsButton | AsLink;
 
@@ -26,7 +31,12 @@ export function Button(props: ButtonProps) {
 
   if (props.to !== undefined) {
     return (
-      <Link to={props.to} className={classes} aria-label={props['aria-label']}>
+      <Link
+        to={props.to}
+        className={classes}
+        aria-label={props['aria-label']}
+        onClick={props.onClick}
+      >
         {children}
       </Link>
     );
