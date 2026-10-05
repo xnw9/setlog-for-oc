@@ -53,6 +53,8 @@ export interface Crop {
 
 export interface Entry {
   id: string;
+  /** Duplicated from the day so "does this log have pictures?" is a single lookup. */
+  logId: string;
   dayId: string;
   personId: string;
   /** Keyed by clock hour, not slot position, so editing start/end hours never moves pictures. */
