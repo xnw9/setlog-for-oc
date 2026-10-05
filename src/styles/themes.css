@@ -1,0 +1,69 @@
+/*
+ * Per-log colour themes. Pastel is the default in global.css; the others override a few tokens
+ * when <html data-theme="…"> is set. Light/dark follows the device, like the default.
+ */
+
+[data-theme='mint'] {
+  --bg: #f5fcf9;
+  --border: #dcefe7;
+  --primary: #8fdcc0;
+  --primary-text: #12382c;
+  --secondary: #ffd9a8;
+  --secondary-text: #4a2f0c;
+  --shadow: 0 4px 16px rgb(110 170 145 / 0.2);
+}
+
+[data-theme='peach'] {
+  --bg: #fff8f3;
+  --border: #f6e3d6;
+  --primary: #ffbe98;
+  --primary-text: #4a240c;
+  --secondary: #c9e4ff;
+  --secondary-text: #1f3a55;
+  --shadow: 0 4px 16px rgb(200 140 105 / 0.2);
+}
+
+[data-theme='lavender'] {
+  --bg: #faf8ff;
+  --border: #e8e2f7;
+  --primary: #c8b6ff;
+  --primary-text: #2b1a5c;
+  --secondary: #ffd1e6;
+  --secondary-text: #4a1f33;
+  --shadow: 0 4px 16px rgb(140 120 200 / 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme='mint'] {
+    --bg: #19211e;
+    --surface: #222b27;
+    --border: #33403a;
+    --primary: #5fc4a0;
+    --primary-text: #0b2a1f;
+    --secondary: #e0b37a;
+    --secondary-text: #2e1d06;
+    --shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  }
+
+  [data-theme='peach'] {
+    --bg: #231c19;
+    --surface: #2d2521;
+    --border: #42352f;
+    --primary: #f0a173;
+    --primary-text: #2d1405;
+    --secondary: #7fb3e6;
+    --secondary-text: #0e2236;
+    --shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  }
+
+  [data-theme='lavender'] {
+    --bg: #1d1b26;
+    --surface: #272431;
+    --border: #3a3547;
+    --primary: #a993f0;
+    --primary-text: #1a0f3d;
+    --secondary: #e391b5;
+    --secondary-text: #2b0d1b;
+    --shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  }
+}
