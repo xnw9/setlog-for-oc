@@ -1,6 +1,6 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Avatar, Button, ConfirmDialog, TextField } from '../../../components';
+import { Avatar, Button, ConfirmDialog, PageLayout, TextField } from '../../../components';
 import { randomAvatarColor } from '../../../lib/avatarColors';
 import { squareImage } from '../../../lib/image';
 import type { Person } from '../../../types';
@@ -8,12 +8,18 @@ import { savePerson } from '../api';
 import styles from './PersonForm.module.css';
 
 interface PersonFormProps {
+  title: string;
   /** The person being edited; omit to add a new one. */
   initial?: Person;
+  /** Extra content below the form, e.g. the delete section. */
+  children?: ReactNode;
 }
 
-/** Photo + name form shared by the Add and Edit person pages. Save and Cancel both return to /people. */
-export function PersonForm({ initial }: PersonFormProps) {
+/**
+ * Page with the photo + name form, shared by Add and Edit person. Save, Cancel and the header
+ * back button all return to /people; Cancel and Back ask first if there are unsaved changes.
+ */
+export function PersonForm({ title, initial, children }: PersonFormProps) {
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -58,70 +64,73 @@ export function PersonForm({ initial }: PersonFormProps) {
   }
 
   return (
-    <form className={styles.form} onSubmit={save} noValidate>
-      <div className={styles.photo}>
-        <Avatar name={trimmedName || '?'} color={color} imageBlob={avatarBlob} size={112} />
-        <div className={styles.photoActions}>
-          <Button
-            variant="secondary"
-            onClick={() => fileInput.current?.click()}
-            disabled={processingPhoto}
-          >
-            {processingPhoto ? 'Processing…' : avatarBlob ? 'Change photo' : 'Add photo'}
-          </Button>
-          {avatarBlob && (
-            <Button variant="ghost" onClick={() => setAvatarBlob(undefined)}>
-              Remove photo
+    <PageLayout title={title} onBack={cancel}>
+      <form className={styles.form} onSubmit={save} noValidate>
+        <div className={styles.photo}>
+          <Avatar name={trimmedName || '?'} color={color} imageBlob={avatarBlob} size={112} />
+          <div className={styles.photoActions}>
+            <Button
+              variant="secondary"
+              onClick={() => fileInput.current?.click()}
+              disabled={processingPhoto}
+            >
+              {processingPhoto ? 'Processing…' : avatarBlob ? 'Change photo' : 'Add photo'}
             </Button>
+            {avatarBlob && (
+              <Button variant="ghost" onClick={() => setAvatarBlob(undefined)}>
+                Remove photo
+              </Button>
+            )}
+          </div>
+          {photoError && (
+            <p className={styles.photoError} role="alert">
+              {photoError}
+            </p>
           )}
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(event) => {
+              void choosePhoto(event.target.files?.[0]);
+              event.target.value = ''; // allow picking the same file again
+            }}
+          />
         </div>
-        {photoError && (
-          <p className={styles.photoError} role="alert">
-            {photoError}
-          </p>
-        )}
-        <input
-          ref={fileInput}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(event) => {
-            void choosePhoto(event.target.files?.[0]);
-            event.target.value = ''; // allow picking the same file again
-          }}
+
+        <TextField
+          label="Name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          error={nameError}
+          maxLength={60}
+          autoComplete="off"
+          required
         />
-      </div>
 
-      <TextField
-        label="Name"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        error={nameError}
-        maxLength={60}
-        autoComplete="off"
-        required
-      />
+        <div className={styles.actions}>
+          <Button variant="ghost" onClick={cancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={saving || processingPhoto}>
+            Save
+          </Button>
+        </div>
 
-      <div className={styles.actions}>
-        <Button variant="ghost" onClick={cancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={saving || processingPhoto}>
-          Save
-        </Button>
-      </div>
-
-      <ConfirmDialog
-        open={confirmDiscard}
-        title="Discard changes?"
-        confirmLabel="Discard"
-        cancelLabel="Keep editing"
-        destructive
-        onConfirm={() => navigate('/people')}
-        onCancel={() => setConfirmDiscard(false)}
-      >
-        Your changes to this person won't be saved.
-      </ConfirmDialog>
-    </form>
+        <ConfirmDialog
+          open={confirmDiscard}
+          title="Discard changes?"
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          destructive
+          onConfirm={() => navigate('/people')}
+          onCancel={() => setConfirmDiscard(false)}
+        >
+          Your changes to this person won't be saved.
+        </ConfirmDialog>
+      </form>
+      {children}
+    </PageLayout>
   );
 }
