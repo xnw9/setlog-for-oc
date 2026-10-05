@@ -51,3 +51,8 @@
   display: flex;
   width: 100%;
 }
+
+.danger {
+  background: var(--danger);
+  color: var(--danger-text);
+}
