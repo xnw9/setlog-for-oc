@@ -8,10 +8,16 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id
   error?: string;
 }
 
+/** `className` styles the wrapper, not the input, so callers can set the field's layout. */
 export function TextField({ label, hint, error, className, ...inputProps }: TextFieldProps) {
   const id = useId();
   const noteId = `${id}-note`;
   const note = error ?? hint;
+
+  // aria-describedby takes a list, so merge rather than overwrite: spreading inputProps over a
+  // computed value would silently unlink the error text and leave it unannounced.
+  const describedBy =
+    [note && noteId, inputProps['aria-describedby']].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className={[styles.field, className].filter(Boolean).join(' ')}>
@@ -19,11 +25,11 @@ export function TextField({ label, hint, error, className, ...inputProps }: Text
         {label}
       </label>
       <input
+        {...inputProps}
         id={id}
         className={styles.input}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={note ? noteId : undefined}
-        {...inputProps}
+        aria-invalid={error ? true : inputProps['aria-invalid']}
+        aria-describedby={describedBy}
       />
       {note && (
         <p id={noteId} className={error ? styles.error : styles.hint}>
