@@ -11,6 +11,8 @@
   --secondary: #c9e4ff;
   --secondary-text: #1f3a55;
   --focus: #9b7bff;
+  --danger: #e5484d;
+  --danger-text: #ffffff;
   --shadow: 0 4px 16px rgb(186 140 170 / 0.18);
 
   --radius-sm: 12px;
@@ -38,6 +40,8 @@
     --secondary: #7fb3e6;
     --secondary-text: #0e2236;
     --focus: #b9a2ff;
+    --danger: #ff6b70;
+    --danger-text: #2a0a0b;
     --shadow: 0 4px 16px rgb(0 0 0 / 0.35);
 
     color-scheme: dark;
