@@ -2,7 +2,7 @@
 
 A local-only photo log of a group's day, inspired by [Setlog](https://apps.apple.com/app/id6587576438). It is a public static website. **Everything stays in your browser, and your photos never leave your device.**
 
-> Status: scaffold in progress (landing page and blank pages). The full spec is in [`docs/PLAN.md`](docs/PLAN.md), and the decision history is in [`docs/HANDOFF.md`](docs/HANDOFF.md).
+> Status: scaffold in progress. The database, shared components, themes and routes are in place, and the pages are still blank.
 
 ## Running locally
 
@@ -20,10 +20,10 @@ npm run format     # Prettier (format:check to only check)
 ## Scaffold to-do
 
 - [ ] Tests: Vitest + React Testing Library, with a landing-page smoke test
-- [ ] Database: Dexie schema, persistent-storage request, live queries
-- [ ] Add `logId` to `Entry`, so the "log has pictures" lock check is a single query
-- [ ] Per-log themes (pastel, mint, peach, lavender), each in light and dark
-- [ ] Shared components: TextField, SegmentedControl, IconButton, Avatar, ConfirmDialog
+- [x] Database: Dexie schema, persistent-storage request, live queries
+- [x] Add `logId` to `Entry`, so the "log has pictures" lock check is a single query
+- [x] Per-log themes (pastel, mint, peach, lavender), each in light and dark
+- [x] Shared components: TextField, SegmentedControl, IconButton, Avatar, ConfirmDialog
 - [ ] CI: GitHub Actions running type-check, lint, tests and build
 
 ## Plan summary
@@ -114,12 +114,12 @@ setlog-for-oc/
 │  │  ├─ export/            canvas renderer, slot/day export, save strategies
 │  │  └─ backup/            backup/restore zip, clear all data
 │  ├─ components/           shared UI used by several features (buttons, dialogs, confirm warning)
+│  ├─ dev/                  dev-only pages, left out of production builds (/#/dev/components)
 │  ├─ db/                   Dexie database and schema
 │  ├─ hooks/                shared React hooks
 │  ├─ lib/                  pure helpers with no React (slot maths, day labels, image resizing)
-│  ├─ styles/               theme tokens, global CSS, fonts
+│  ├─ styles/               theme tokens, global CSS, per-log themes
 │  └─ types/                shared TypeScript types (Person, Log, Day, Entry)
-├─ docs/                    planning docs (PLAN.md, HANDOFF.md)
 └─ README.md
 ```
 
