@@ -1,4 +1,4 @@
-// Data model from docs/PLAN.md §2. Grid layout is deferred (§12), so there is no layout field.
+// Data model for the plan in README.md. Grid layout is deferred, so there is no layout field.
 
 export type DayMode = 'date' | 'weekday';
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';

@@ -1,3 +1,8 @@
+/* Self-hosted fonts only; see src/styles/fonts/README.md. Nothing is fetched from the network,
+ * so the app stays offline-capable and no request leaks to a font CDN. Until font files are
+ * added, 'Nunito' simply doesn't resolve and system-ui takes over. */
+@import './fonts/fonts.css';
+
 :root {
   --font: 'Nunito', 'M PLUS Rounded 1c', system-ui, sans-serif;
 

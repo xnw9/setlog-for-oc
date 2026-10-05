@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { HashRouter, Navigate, Route, Routes } from 'react-router';
+import { HashRouter, Route, Routes } from 'react-router';
+import { NotFoundPage } from '../components';
 import { DayViewPage } from '../features/day-view';
 import { LandingPage, LogHomePage, LogSettingsPage, NewLogPage } from '../features/logs';
 import { PeoplePage } from '../features/people';
@@ -20,7 +21,7 @@ export function App() {
           <Route path="/logs/:logId/settings" element={<LogSettingsPage />} />
           <Route path="/logs/:logId/days/:dayIndex" element={<DayViewPage />} />
           {ComponentsPage && <Route path="/dev/components" element={<ComponentsPage />} />}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </HashRouter>

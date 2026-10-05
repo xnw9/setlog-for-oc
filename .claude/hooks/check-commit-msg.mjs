@@ -7,10 +7,18 @@ const SUBJECT = new RegExp(`^(${TYPES})(\\([a-z0-9-]+\\))?!?: [A-Z]`);
 const PASS_THROUGH = /^(Merge |Revert "|fixup! |squash! |amend! )/;
 
 const cmd = JSON.parse(readFileSync(0, 'utf8')).tool_input?.command ?? '';
-if (!/\bgit\b[\s\S]*\bcommit\b/.test(cmd)) process.exit(0);
 
-// Find the message: a heredoc (Claude's usual form), else the -m/--message values.
+// `git commit` as a real invocation: at the start of the command or after a shell separator,
+// with only git's own global options (-C dir, -c key=val, --no-pager, …) in between. This
+// deliberately does not match mentions of the words elsewhere, e.g. `git log --grep commit`.
+const GIT_COMMIT =
+  /(?:^|[\n;&|(]|\$\()\s*(?:\w+=\S*\s+)*git(?:\s+(?:-[cC]\s+\S+|--(?:no-pager|bare|git-dir|work-tree|namespace|exec-path)(?:[=\s]\S+)?))*\s+commit\b/;
+if (!GIT_COMMIT.test(cmd)) process.exit(0);
+
+// Find the message passed to -m/--message. Claude's usual form wraps a heredoc in the -m value
+// (`-m "$(cat <<'EOF' … EOF)"`), so look for that first; otherwise take the literal -m values.
 function extractMessage(c) {
+  if (!/(?:\s-[a-zA-Z]*m|--message)(?:[\s=]|$)/.test(c)) return null; // -F, --no-edit, editor
   const heredoc = c.match(/<<-?\s*(['"]?)(\w+)\1[^\n]*\n([\s\S]*?)\n\s*\2\s*(?:\n|$|\))/);
   if (heredoc) return heredoc[3];
   const parts = [];
