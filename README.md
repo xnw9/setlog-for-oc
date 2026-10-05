@@ -26,6 +26,11 @@ npm run format     # Prettier (format:check to only check)
 - [x] Shared components: TextField, SegmentedControl, IconButton, Avatar, ConfirmDialog
 - [ ] CI: GitHub Actions running type-check, lint, tests and build
 
+## Feature to-do
+
+- [ ] People: manual crop tool for profile pictures (currently an automatic centre crop)
+- [ ] People: "Discard changes?" on browser Back too (needs a data router for `useBlocker`)
+
 ## Plan summary
 
 ### What it is
