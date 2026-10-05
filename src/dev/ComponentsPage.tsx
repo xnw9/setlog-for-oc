@@ -9,7 +9,8 @@ import {
   SegmentedControl,
   TextField,
 } from '../components';
-import type { ImageRatio, SlotHours } from '../types';
+import { useDocumentTheme } from '../hooks/useDocumentTheme';
+import type { ImageRatio, SlotHours, ThemeName } from '../types';
 import styles from './ComponentsPage.module.css';
 
 /** Dev-only gallery of the shared components (/#/dev/components). Not in production builds. */
@@ -19,9 +20,25 @@ export default function ComponentsPage() {
   const [ratio, setRatio] = useState<ImageRatio>('16:9');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [lastChoice, setLastChoice] = useState('none yet');
+  const [theme, setTheme] = useState<ThemeName>('pastel');
+  useDocumentTheme(theme);
 
   return (
     <PageLayout title="Components" backTo="/">
+      <Card className={styles.section}>
+        <SegmentedControl<ThemeName>
+          label="Theme"
+          options={[
+            { value: 'pastel', label: 'Pastel' },
+            { value: 'mint', label: 'Mint' },
+            { value: 'peach', label: 'Peach' },
+            { value: 'lavender', label: 'Lavender' },
+          ]}
+          value={theme}
+          onChange={setTheme}
+        />
+      </Card>
+
       <Card className={styles.section}>
         <h2>Button</h2>
         <div className={styles.row}>
