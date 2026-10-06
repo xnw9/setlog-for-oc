@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Button, ConfirmDialog, IconButton, PageLayout } from '../../../components';
 import { useDocumentTheme } from '../../../hooks/useDocumentTheme';
+import { ExportDialog, type SlotImageInput } from '../../export';
 import { addDays, dayLabel } from '../../../lib/days';
 import { currentSlot, formatSlot, slotsFor } from '../../../lib/slots';
 import {
@@ -32,6 +33,7 @@ export function DayView({ data }: { data: DayViewData }) {
   const [params, setParams] = useSearchParams();
   const [slotListOpen, setSlotListOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [exporting, setExporting] = useState<'slot' | 'day'>();
   const swipeStart = useRef<{ x: number; y: number }>(undefined);
   useDocumentTheme(log.theme);
 
@@ -52,6 +54,15 @@ export function DayView({ data }: { data: DayViewData }) {
     entries.find((entry) => entry.personId === personId && entry.slotStartHour === startHour);
   const label = (startHour: number) => formatSlot(startHour, log.slotHours, log.labelMode);
   const isLastDay = day.index === dayCount - 1;
+  const hasPhotos = (startHour: number) =>
+    entries.some((entry) => entry.slotStartHour === startHour);
+  const exportInput = (startHour: number): SlotImageInput => ({
+    log,
+    dayIndex: day.index,
+    slotStartHour: startHour,
+    members,
+    entries,
+  });
 
   // ← / → change slot, unless typing in a field or a dialog is open.
   useEffect(() => {
@@ -97,16 +108,25 @@ export function DayView({ data }: { data: DayViewData }) {
         onPrevious={() => goToDay(day.index - 1)}
         onNext={() => goToDay(day.index + 1)}
       />
-      <Switcher
-        unit="slot"
-        label={`${label(slot.startHour)}  (${current + 1}/${slots.length})`}
-        labelDescription={`Slot ${label(slot.startHour)}, ${current + 1} of ${slots.length}. Show all slots`}
-        hasPrevious={current > 0}
-        hasNext={current < slots.length - 1}
-        onPrevious={() => goToSlot(current - 1)}
-        onNext={() => goToSlot(current + 1)}
-        onLabelClick={() => setSlotListOpen(true)}
-      />
+      <div className={styles.slotRow}>
+        <Switcher
+          unit="slot"
+          label={`${label(slot.startHour)}  (${current + 1}/${slots.length})`}
+          labelDescription={`Slot ${label(slot.startHour)}, ${current + 1} of ${slots.length}. Show all slots`}
+          hasPrevious={current > 0}
+          hasNext={current < slots.length - 1}
+          onPrevious={() => goToSlot(current - 1)}
+          onNext={() => goToSlot(current + 1)}
+          onLabelClick={() => setSlotListOpen(true)}
+        />
+        <IconButton
+          aria-label="Export this slot"
+          disabled={!hasPhotos(slot.startHour)}
+          onClick={() => setExporting('slot')}
+        >
+          ⤓
+        </IconButton>
+      </div>
 
       <ul
         className={styles.rows}
@@ -143,14 +163,35 @@ export function DayView({ data }: { data: DayViewData }) {
         })}
       </ul>
 
-      {isLastDay && (
-        <Button
-          variant="secondary"
-          block
-          onClick={async () => goToDay(await createNextDay(log.id))}
-        >
-          + Create new day
+      <div className={styles.dayActions}>
+        <Button variant="ghost" disabled={entries.length === 0} onClick={() => setExporting('day')}>
+          Export day
         </Button>
+        {isLastDay && (
+          <Button variant="secondary" onClick={async () => goToDay(await createNextDay(log.id))}>
+            + Create new day
+          </Button>
+        )}
+      </div>
+
+      {exporting && (
+        <ExportDialog
+          key={exporting} // a fresh dialog for each export
+          title={
+            exporting === 'slot'
+              ? `Export ${label(slot.startHour)}`
+              : `Export ${dayLabel(log.dayMode, log.firstDayKey, day.index)}`
+          }
+          log={log}
+          slots={
+            exporting === 'slot'
+              ? [exportInput(slot.startHour)]
+              : slots
+                  .filter(({ startHour }) => hasPhotos(startHour))
+                  .map(({ startHour }) => exportInput(startHour))
+          }
+          onClose={() => setExporting(undefined)}
+        />
       )}
 
       <SlotList

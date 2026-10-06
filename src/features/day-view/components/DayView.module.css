@@ -7,3 +7,24 @@
   gap: var(--space-4);
   touch-action: pan-y; /* vertical scrolling stays native; horizontal swipes change slot */
 }
+
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.slotRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Export day, and Create new day on the last day: side by side, sharing the width. */
+.dayActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.dayActions > * {
+  flex: 1;
+}
