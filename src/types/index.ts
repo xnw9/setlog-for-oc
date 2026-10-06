@@ -27,7 +27,7 @@ export interface Log {
   firstDayKey: string;
   /** Locked while the log has entries. */
   slotHours: SlotHours;
-  /** 0–23, aligned to slotHours. */
+  /** 0–23. Once the log has pictures it only moves in steps of slotHours. */
   startHour: number;
   /** 0–23. endHour <= startHour means the day ends on the next calendar day. */
   endHour: number;
