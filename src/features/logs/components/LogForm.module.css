@@ -15,7 +15,7 @@
   font-weight: 800;
 }
 
-.hours {
+.pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
@@ -30,4 +30,14 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+.note {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.removals {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
 }

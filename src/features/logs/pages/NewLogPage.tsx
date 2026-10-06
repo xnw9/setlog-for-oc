@@ -1,5 +1,5 @@
 import { LogForm } from '../components/LogForm';
 
 export function NewLogPage() {
-  return <LogForm />;
+  return <LogForm mode="create" />;
 }

@@ -21,7 +21,8 @@ import {
 } from '../../../lib/slots';
 import type { DayMode, ImageRatio, LabelMode, SlotHours, ThemeName, Weekday } from '../../../types';
 import { usePeople } from '../../people';
-import { createLog } from '../api';
+import { createLog, updateLog, type LogForEdit, type NewLog } from '../api';
+import { picturesToRemove, type Removal } from '../lib/removals';
 import { MemberPicker } from './MemberPicker';
 import styles from './LogForm.module.css';
 
@@ -31,8 +32,11 @@ interface Draft {
   dayMode: DayMode;
   startDate: string;
   startWeekday: Weekday;
-  /** Kept as typed so the field can be cleared while editing. */
+  /** New log only. Kept as typed so the field can be cleared while editing. */
   dayCount: string;
+  /** Settings only: the range of existing days to keep, inclusive. */
+  keepFrom: number;
+  keepUntil: number;
   slotHours: SlotHours;
   startHour: number;
   endHour: number;
@@ -48,6 +52,8 @@ const newDraft = (): Draft => ({
   startDate: todayIsoDate(),
   startWeekday: 'mon',
   dayCount: '1',
+  keepFrom: 0,
+  keepUntil: 0,
   slotHours: 2,
   startHour: 8,
   endHour: 22,
@@ -56,28 +62,62 @@ const newDraft = (): Draft => ({
   theme: 'pastel',
 });
 
+const draftFromLog = ({ log, days }: LogForEdit): Draft => {
+  const { id: _id, firstDayKey: _firstDayKey, ...settings } = log; // the draft splits the first day by mode
+  return {
+    ...newDraft(),
+    ...settings,
+    startDate: log.dayMode === 'date' ? log.firstDayKey : todayIsoDate(),
+    startWeekday: log.dayMode === 'weekday' ? (log.firstDayKey as Weekday) : 'mon',
+    dayCount: String(days.length),
+    keepFrom: 0,
+    keepUntil: days.length - 1,
+  };
+};
+
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => ({ value: hour, label: formatHour(hour) }));
 
-/** The New log page. Cancel and the back button return to /logs, asking first if anything changed. */
-export function LogForm() {
+const slotLabel = (startHour: number, slotHours: SlotHours) =>
+  `${formatHour(startHour)}–${formatHour((startHour + slotHours) % 24)}`;
+
+type LogFormProps = { mode: 'create' } | { mode: 'edit'; data: LogForEdit };
+
+/**
+ * The New log and Log settings pages. Settings can only trim days, and locks day mode, first day
+ * and slot length while the log has pictures. Cancel and Back return to /logs, asking first if
+ * anything changed; saving warns before deleting pictures.
+ */
+export function LogForm(props: LogFormProps) {
+  const data = props.mode === 'edit' ? props.data : undefined;
   const navigate = useNavigate();
   const people = usePeople();
-  const [initial] = useState(newDraft);
+  const [initial] = useState(() => (data ? draftFromLog(data) : newDraft()));
   const [draft, setDraft] = useState(initial);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [pendingRemovals, setPendingRemovals] = useState<Removal[]>();
   useDocumentTheme(draft.theme); // live preview of the chosen theme
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
+  /** Day mode, first day and slot length can't change once the log has pictures. */
+  const locked = (data?.entries.length ?? 0) > 0;
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
   const firstDayKey = draft.dayMode === 'date' ? draft.startDate : draft.startWeekday;
-  const dayCount = /^\d+$/.test(draft.dayCount) ? Number(draft.dayCount) : 0;
+  const dayCount = data
+    ? draft.keepUntil - draft.keepFrom + 1
+    : /^\d+$/.test(draft.dayCount)
+      ? Number(draft.dayCount)
+      : 0;
   const slots = slotsFor(draft.startHour, draft.endHour, draft.slotHours);
+  // With pictures, the start moves in whole slots so every picture stays on a slot boundary.
+  const startOptions = locked
+    ? HOURS.filter(({ value }) => (value - initial.startHour + 24) % draft.slotHours === 0)
+    : HOURS;
 
   const errors = {
     name: draft.name.trim() ? undefined : 'Name is required.',
@@ -88,38 +128,63 @@ export function LogForm() {
   };
   const shown = (error: string | undefined) => (submitted ? error : undefined);
 
-  const dayPreview =
-    dayCount >= 1 && !errors.startDate
-      ? `${plural(dayCount, 'day')}: ${dayLabel(draft.dayMode, firstDayKey, 0)}` +
-        (dayCount > 1 ? ` → ${dayLabel(draft.dayMode, firstDayKey, dayCount - 1)}` : '')
+  const label = (index: number) => dayLabel(draft.dayMode, firstDayKey, index);
+  const dayPreview = data
+    ? `${plural(dayCount, 'day')} kept` +
+      (data.days.length > dayCount ? `, ${plural(data.days.length - dayCount, 'day')} removed` : '')
+    : dayCount >= 1 && !errors.startDate
+      ? `${plural(dayCount, 'day')}: ${label(0)}` +
+        (dayCount > 1 ? ` → ${label(dayCount - 1)}` : '')
       : undefined;
-  const slotRange = (i: number) =>
-    `${formatHour(slots[i].startHour)}–${formatHour(slots[i].endHour)}`;
+  const slotRange = (i: number) => slotLabel(slots[i].startHour, draft.slotHours);
   const slotPreview =
     `${plural(slots.length, 'slot')}: ${slotRange(0)}` +
     (slots.length > 1 ? ` … ${slotRange(slots.length - 1)}` : '');
 
-  async function create(event: FormEvent) {
+  const fields = (): NewLog => ({
+    name: draft.name.trim(),
+    memberIds: draft.memberIds,
+    dayMode: draft.dayMode,
+    firstDayKey,
+    slotHours: draft.slotHours,
+    startHour: draft.startHour,
+    endHour: draft.endHour,
+    labelMode: draft.labelMode,
+    imageRatio: draft.imageRatio,
+    theme: draft.theme,
+  });
+  const slotStartHours = slots.map((slot) => slot.startHour);
+
+  async function save() {
+    setSaving(true);
+    if (data) {
+      await updateLog(data.log.id, {
+        fields: fields(),
+        keepFrom: draft.keepFrom,
+        keepUntil: draft.keepUntil,
+        slotStartHours,
+      });
+      navigate('/logs');
+    } else {
+      navigate(`/logs/${await createLog(fields(), dayCount)}`);
+    }
+  }
+
+  function submit(event: FormEvent) {
     event.preventDefault();
     setSubmitted(true);
     if (Object.values(errors).some(Boolean)) return;
-    setSaving(true);
-    const id = await createLog(
-      {
-        name: draft.name.trim(),
-        memberIds: draft.memberIds,
-        dayMode: draft.dayMode,
-        firstDayKey,
-        slotHours: draft.slotHours,
-        startHour: draft.startHour,
-        endHour: draft.endHour,
-        labelMode: draft.labelMode,
-        imageRatio: draft.imageRatio,
-        theme: draft.theme,
-      },
-      dayCount,
-    );
-    navigate(`/logs/${id}`);
+    const removals = data
+      ? picturesToRemove(data.entries, {
+          days: data.days,
+          keepFrom: draft.keepFrom,
+          keepUntil: draft.keepUntil,
+          memberIds: draft.memberIds,
+          slotStartHours,
+        })
+      : [];
+    if (removals.length > 0) setPendingRemovals(removals);
+    else void save();
   }
 
   function cancel() {
@@ -127,9 +192,26 @@ export function LogForm() {
     else navigate('/logs');
   }
 
+  /** "2 in removed days: Monday #2, Tuesday #2" and so on, one line per reason. */
+  function removalSummary(removals: Removal[]) {
+    const names = new Map(people?.map((person) => [person.id, person.name]));
+    const group = (reason: Removal['reason'], describe: (removal: Removal) => string) => {
+      const matching = removals.filter((removal) => removal.reason === reason);
+      return { count: matching.length, items: [...new Set(matching.map(describe))].join(', ') };
+    };
+    return [
+      { ...group('day', (r) => label(r.dayIndex)), what: 'in removed days' },
+      { ...group('member', (r) => names.get(r.entry.personId) ?? '?'), what: 'of removed members' },
+      {
+        ...group('slot', (r) => slotLabel(r.entry.slotStartHour, draft.slotHours)),
+        what: 'in removed slots',
+      },
+    ].filter((line) => line.count > 0);
+  }
+
   return (
     <PageLayout
-      title="New log"
+      title={data ? 'Log settings' : 'New log'}
       backTo="/logs"
       onBack={(event) => {
         if (!dirty) return;
@@ -137,7 +219,7 @@ export function LogForm() {
         setConfirmDiscard(true);
       }}
     >
-      <form className={styles.form} onSubmit={create} noValidate>
+      <form className={styles.form} onSubmit={submit} noValidate>
         <Card className={styles.section}>
           <TextField
             label="Name"
@@ -168,6 +250,7 @@ export function LogForm() {
             ]}
             value={draft.dayMode}
             onChange={(dayMode) => set('dayMode', dayMode)}
+            disabled={locked}
           />
           {draft.dayMode === 'date' ? (
             <TextField
@@ -176,6 +259,7 @@ export function LogForm() {
               value={draft.startDate}
               onChange={(event) => set('startDate', event.target.value)}
               error={shown(errors.startDate)}
+              disabled={locked}
             />
           ) : (
             <SelectField<Weekday>
@@ -183,20 +267,52 @@ export function LogForm() {
               options={WEEKDAYS.map((day) => ({ value: day, label: WEEKDAY_NAMES[day] }))}
               value={draft.startWeekday}
               onChange={(startWeekday) => set('startWeekday', startWeekday)}
+              disabled={locked}
             />
           )}
-          <TextField
-            label="Number of days"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            step={1}
-            value={draft.dayCount}
-            onChange={(event) => set('dayCount', event.target.value)}
-            error={shown(errors.dayCount)}
-            hint="You can add more days later."
-          />
+          {data ? (
+            <div className={styles.pair}>
+              <SelectField<number>
+                label="Keep from"
+                options={data.days.map((day) => ({ value: day.index, label: label(day.index) }))}
+                value={draft.keepFrom}
+                onChange={(keepFrom) =>
+                  setDraft((current) => ({
+                    ...current,
+                    keepFrom,
+                    keepUntil: Math.max(current.keepUntil, keepFrom),
+                  }))
+                }
+              />
+              <SelectField<number>
+                label="Keep until"
+                options={data.days
+                  .filter((day) => day.index >= draft.keepFrom)
+                  .map((day) => ({ value: day.index, label: label(day.index) }))}
+                value={draft.keepUntil}
+                onChange={(keepUntil) => set('keepUntil', keepUntil)}
+              />
+            </div>
+          ) : (
+            <TextField
+              label="Number of days"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              value={draft.dayCount}
+              onChange={(event) => set('dayCount', event.target.value)}
+              error={shown(errors.dayCount)}
+              hint="You can add more days later."
+            />
+          )}
           {dayPreview && <p className={styles.preview}>{dayPreview}</p>}
+          {data && (
+            <p className={styles.note}>
+              {locked ? 'This log has pictures, so day mode and the first day are locked. ' : ''}
+              Days can only be removed here. Add days from the log itself.
+            </p>
+          )}
         </Card>
 
         <Card className={styles.section}>
@@ -216,11 +332,12 @@ export function LogForm() {
                 endHour: alignEndHour(current.startHour, current.endHour, slotHours),
               }))
             }
+            disabled={locked}
           />
-          <div className={styles.hours}>
+          <div className={styles.pair}>
             <SelectField<number>
               label="Start"
-              options={HOURS}
+              options={startOptions}
               value={draft.startHour}
               onChange={(startHour) =>
                 // Keep the same number of slots when the start moves.
@@ -243,6 +360,12 @@ export function LogForm() {
             />
           </div>
           <p className={styles.preview}>{slotPreview}</p>
+          {locked && (
+            <p className={styles.note}>
+              This log has pictures, so the slot length is locked and the start moves in whole
+              slots.
+            </p>
+          )}
           <SegmentedControl<LabelMode>
             label="Slot labels"
             options={[
@@ -284,21 +407,45 @@ export function LogForm() {
             Cancel
           </Button>
           <Button type="submit" disabled={saving}>
-            Create log
+            {data ? 'Save' : 'Create log'}
           </Button>
         </div>
       </form>
 
       <ConfirmDialog
         open={confirmDiscard}
-        title="Discard this log?"
+        title={data ? 'Discard changes?' : 'Discard this log?'}
         confirmLabel="Discard"
         cancelLabel="Keep editing"
         destructive
         onConfirm={() => navigate('/logs')}
         onCancel={() => setConfirmDiscard(false)}
       >
-        It hasn't been created yet, so your settings will be lost.
+        {data
+          ? "Your changes to this log won't be saved."
+          : "It hasn't been created yet, so your settings will be lost."}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={pendingRemovals !== undefined}
+        title={`Delete ${plural(pendingRemovals?.length ?? 0, 'picture')}?`}
+        confirmLabel="Delete and save"
+        destructive
+        onConfirm={() => {
+          setPendingRemovals(undefined);
+          void save();
+        }}
+        onCancel={() => setPendingRemovals(undefined)}
+      >
+        <p>These changes remove pictures:</p>
+        <ul className={styles.removals}>
+          {pendingRemovals &&
+            removalSummary(pendingRemovals).map((line) => (
+              <li key={line.what}>
+                {line.count} {line.what}: {line.items}
+              </li>
+            ))}
+        </ul>
       </ConfirmDialog>
     </PageLayout>
   );
