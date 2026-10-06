@@ -82,15 +82,35 @@ const HOURS = Array.from({ length: 24 }, (_, hour) => ({ value: hour, label: for
 const slotLabel = (startHour: number, slotHours: SlotHours) =>
   `${formatHour(startHour)}–${formatHour((startHour + slotHours) % 24)}`;
 
-type LogFormProps = { mode: 'create' } | { mode: 'edit'; data: LogForEdit };
+type LogFormProps =
+  | { mode: 'create' }
+  | {
+      mode: 'edit';
+      data: LogForEdit;
+      /** Where Back, Cancel and Save go: /logs, or the day view settings was opened from. */
+      returnTo: string;
+    };
+
+/**
+ * A day view path after a save that kept days keepFrom..: the same day under its new index, or
+ * the nearest kept day if it was trimmed. Other paths are returned as they are.
+ */
+function afterTrim(path: string, keepFrom: number, keptCount: number): string {
+  return path.replace(/\/days\/(\d+)/, (_, index: string) => {
+    const shifted = Math.min(Math.max(Number(index) - keepFrom, 0), keptCount - 1);
+    return `/days/${shifted}`;
+  });
+}
 
 /**
  * The New log and Log settings pages. Settings can only trim days, and locks day mode, first day
- * and slot length while the log has pictures. Cancel and Back return to /logs, asking first if
- * anything changed; saving warns before deleting pictures.
+ * and slot length while the log has pictures. Cancel, Back and Save return to /logs (settings: to
+ * wherever it was opened from), asking first if anything changed; saving warns before deleting
+ * pictures.
  */
 export function LogForm(props: LogFormProps) {
   const data = props.mode === 'edit' ? props.data : undefined;
+  const returnTo = props.mode === 'edit' ? props.returnTo : '/logs';
   const navigate = useNavigate();
   const people = usePeople();
   const [initial] = useState(() => (data ? draftFromLog(data) : newDraft()));
@@ -164,7 +184,7 @@ export function LogForm(props: LogFormProps) {
         keepUntil: draft.keepUntil,
         slotStartHours,
       });
-      navigate('/logs');
+      navigate(afterTrim(returnTo, draft.keepFrom, dayCount));
     } else {
       navigate(`/logs/${await createLog(fields(), dayCount)}`);
     }
@@ -189,7 +209,7 @@ export function LogForm(props: LogFormProps) {
 
   function cancel() {
     if (dirty) setConfirmDiscard(true);
-    else navigate('/logs');
+    else navigate(returnTo);
   }
 
   /** "2 in removed days: Monday #2, Tuesday #2" and so on, one line per reason. */
@@ -212,7 +232,7 @@ export function LogForm(props: LogFormProps) {
   return (
     <PageLayout
       title={data ? 'Log settings' : 'New log'}
-      backTo="/logs"
+      backTo={returnTo}
       onBack={(event) => {
         if (!dirty) return;
         event.preventDefault();
@@ -418,7 +438,7 @@ export function LogForm(props: LogFormProps) {
         confirmLabel="Discard"
         cancelLabel="Keep editing"
         destructive
-        onConfirm={() => navigate('/logs')}
+        onConfirm={() => navigate(returnTo)}
         onCancel={() => setConfirmDiscard(false)}
       >
         {data

@@ -1,9 +1,13 @@
-import { Navigate } from 'react-router';
+import { Navigate, useParams } from 'react-router';
+import { NotFoundPage } from '../../../components';
+import { useOpeningDayIndex } from '../api';
 
-/**
- * `/logs/:logId` opens the log's last day.
- * Until the database exists there are no days to look up, so it opens day 0.
- */
+/** `/logs/:logId` opens the latest day with photos, or the first day if there are none yet. */
 export function LogHomePage() {
-  return <Navigate to="days/0" replace />;
+  const { logId } = useParams();
+  const index = useOpeningDayIndex(logId);
+
+  if (index === null) return <NotFoundPage backTo="/logs" />;
+  if (index === undefined) return null; // loading
+  return <Navigate to={`days/${index}`} replace />;
 }

@@ -10,9 +10,14 @@ interface CommonProps {
   children: ReactNode;
 }
 
-type AsButton = CommonProps & ButtonHTMLAttributes<HTMLButtonElement> & { to?: undefined };
+type AsButton = CommonProps &
+  ButtonHTMLAttributes<HTMLButtonElement> & { to?: undefined; state?: undefined };
 /** Passing `to` renders a router link, e.g. a ⚙ that opens a settings page. */
-type AsLink = CommonProps & { to: string };
+type AsLink = CommonProps & {
+  to: string;
+  /** Router state for the target page, e.g. where to return to. */
+  state?: unknown;
+};
 
 /** Round button holding just an icon, e.g. the ‹ › switchers and the export icon. */
 export function IconButton(props: AsButton | AsLink) {
@@ -21,13 +26,13 @@ export function IconButton(props: AsButton | AsLink) {
 
   if (props.to !== undefined) {
     return (
-      <Link to={props.to} className={classes} aria-label={props['aria-label']}>
+      <Link to={props.to} state={props.state} className={classes} aria-label={props['aria-label']}>
         {children}
       </Link>
     );
   }
 
-  const { variant: _v, className: _c, children: _ch, to: _t, ...buttonProps } = props;
+  const { variant: _v, className: _c, children: _ch, to: _t, state: _s, ...buttonProps } = props;
   return (
     <button type="button" {...buttonProps} className={classes}>
       {children}

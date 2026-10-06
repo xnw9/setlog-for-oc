@@ -1,6 +1,11 @@
 import type { Day, Entry } from '../../../types';
 
-export type EntryRef = Pick<Entry, 'id' | 'dayId' | 'personId' | 'slotStartHour'>;
+/**
+ * A picture identified by its slot alone. The schema v3 index on
+ * [dayId+personId+slotStartHour] is unique, so this names exactly one picture without its id —
+ * which lets callers read pictures from the index instead of loading their image data.
+ */
+export type EntryRef = Pick<Entry, 'dayId' | 'personId' | 'slotStartHour'>;
 
 export interface RemovalCriteria {
   days: Day[];
