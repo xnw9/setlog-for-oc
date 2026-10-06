@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { HashRouter, Route, Routes } from 'react-router';
 import { NotFoundPage } from '../components';
 import { DayViewPage } from '../features/day-view';
-import { LandingPage, LogHomePage, LogSettingsPage, NewLogPage } from '../features/logs';
+import { LandingPage, LogHomePage, LogSettingsPage, LogsPage, NewLogPage } from '../features/logs';
 import { AddPersonPage, EditPersonPage, PeoplePage } from '../features/people';
 
 // Dev-only component gallery. In production builds import.meta.env.DEV is false, so Vite drops it.
@@ -18,6 +18,7 @@ export function App() {
           <Route path="/people" element={<PeoplePage />} />
           <Route path="/people/new" element={<AddPersonPage />} />
           <Route path="/people/:personId" element={<EditPersonPage />} />
+          <Route path="/logs" element={<LogsPage />} />
           <Route path="/logs/new" element={<NewLogPage />} />
           <Route path="/logs/:logId" element={<LogHomePage />} />
           <Route path="/logs/:logId/settings" element={<LogSettingsPage />} />

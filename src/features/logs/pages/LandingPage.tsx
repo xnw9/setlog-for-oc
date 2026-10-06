@@ -1,7 +1,10 @@
 import { Button, Card } from '../../../components';
+import { useLogCount } from '../api';
 import styles from './LandingPage.module.css';
 
 export function LandingPage() {
+  const logCount = useLogCount();
+
   return (
     <div className={styles.page}>
       <header className={styles.hero}>
@@ -10,9 +13,17 @@ export function LandingPage() {
       </header>
 
       <Card className={styles.nav}>
-        <Button to="/logs/new" block>
-          + New log
-        </Button>
+        {/* Logs once there are any; until then, straight to creating the first one. */}
+        {logCount !== undefined &&
+          (logCount > 0 ? (
+            <Button to="/logs" block>
+              Logs
+            </Button>
+          ) : (
+            <Button to="/logs/new" block>
+              + New log
+            </Button>
+          ))}
         <Button to="/people" variant="secondary" block>
           People
         </Button>
