@@ -64,3 +64,9 @@ export function dayLabel(dayMode: DayMode, firstDayKey: string, index: number): 
   const week = Math.floor(index / 7) + 1; // each weekday appears once per 7 consecutive days
   return week > 1 ? `${name} #${week}` : name;
 }
+
+/** The first-day key after dropping `count` days from the start: the date or weekday moves on. */
+export function shiftFirstDayKey(dayMode: DayMode, firstDayKey: string, count: number): string {
+  if (dayMode === 'date') return addDays(firstDayKey, count);
+  return WEEKDAYS[(WEEKDAYS.indexOf(firstDayKey as Weekday) + count) % 7];
+}
