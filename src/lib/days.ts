@@ -28,8 +28,8 @@ export function isIsoDate(value: string): boolean {
   return toIsoDate(parseIsoDate(value)) === value; // rejects e.g. 2026-02-30
 }
 
-export function todayIsoDate(): string {
-  return toIsoDate(new Date());
+export function todayIsoDate(now = new Date()): string {
+  return toIsoDate(now);
 }
 
 export function addDays(iso: string, days: number): string {
@@ -69,4 +69,10 @@ export function dayLabel(dayMode: DayMode, firstDayKey: string, index: number): 
 export function shiftFirstDayKey(dayMode: DayMode, firstDayKey: string, count: number): string {
   if (dayMode === 'date') return addDays(firstDayKey, count);
   return WEEKDAYS[(WEEKDAYS.indexOf(firstDayKey as Weekday) + count) % 7];
+}
+
+/** Whole days from `fromIso` to `toIso` (negative if `toIso` is earlier). */
+export function daysBetween(fromIso: string, toIso: string): number {
+  const ms = parseIsoDate(toIso).getTime() - parseIsoDate(fromIso).getTime();
+  return Math.round(ms / 86_400_000); // round: DST days are 23 or 25 hours long
 }

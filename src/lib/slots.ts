@@ -1,4 +1,5 @@
-import type { SlotHours } from '../types';
+import type { LabelMode, Log, SlotHours } from '../types';
+import { addDays, todayIsoDate } from './days';
 
 export interface Slot {
   /** Clock hour 0–23; entries are keyed by this. */
@@ -37,4 +38,29 @@ export function slotsFor(startHour: number, endHour: number, slotHours: SlotHour
 /** "08:00" */
 export function formatHour(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`;
+}
+
+/** "08:00–10:00" or "08:00", following the log's label setting. */
+export function formatSlot(startHour: number, slotHours: SlotHours, labelMode: LabelMode): string {
+  const start = formatHour(startHour);
+  return labelMode === 'start' ? start : `${start}–${formatHour((startHour + slotHours) % 24)}`;
+}
+
+/**
+ * Where "now" falls in a log's daily window: the log day's date and the slot's start hour, or
+ * `null` outside the window. A window that crosses midnight belongs to the day it started, so
+ * 01:00 in a 22:00–02:00 log is still yesterday's log day.
+ */
+export function currentSlot(
+  log: Pick<Log, 'startHour' | 'endHour' | 'slotHours'>,
+  now = new Date(),
+): { date: string; slotStartHour: number } | null {
+  const hour = now.getHours();
+  const offset = (hour - log.startHour + 24) % 24;
+  if (offset >= spanHours(log.startHour, log.endHour)) return null;
+  const today = todayIsoDate(now);
+  return {
+    date: hour < log.startHour ? addDays(today, -1) : today,
+    slotStartHour: (log.startHour + Math.floor(offset / log.slotHours) * log.slotHours) % 24,
+  };
 }
