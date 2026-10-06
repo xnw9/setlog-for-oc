@@ -33,12 +33,31 @@
   display: block;
 }
 
-/* Centred, like the label on an empty frame, so it stays put when a photo is added. */
-.slotBadge {
+/*
+ * Time label exactly in the middle (where an empty frame shows it, so it never moves); the caption
+ * hangs below it. Rows: space, label, space; the caption sits at the top of the last row.
+ */
+.labels {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: var(--space-6) var(--space-4);
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
+  row-gap: var(--space-2);
+  pointer-events: none;
+}
+
+.labels > :first-child {
+  grid-row: 2;
+}
+
+.labels > :nth-child(2) {
+  grid-row: 3;
+  align-self: start;
+}
+
+.badge {
+  max-width: 100%;
   padding: var(--space-1) var(--space-4);
   border-radius: var(--radius-pill);
   background: rgb(30 20 40 / 0.6);
@@ -46,7 +65,32 @@
   font-size: 1.125rem;
   font-weight: 700;
   white-space: nowrap;
-  pointer-events: none;
+}
+
+.caption {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.captionInput {
+  width: min(100%, 22rem);
+  border: 2px solid var(--focus);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.captionInput::placeholder {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.captionInput:focus-visible {
+  outline: none;
 }
 
 .photoActions {
@@ -79,4 +123,10 @@
   color: var(--danger);
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.captionButton {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
 }

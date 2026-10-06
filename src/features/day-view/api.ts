@@ -62,7 +62,7 @@ export async function setPhoto(
     await db.transaction('rw', db.entries, async () => {
       const existing = await db.entries.where('[dayId+personId+slotStartHour]').equals(key).first();
       if (existing) {
-        await db.entries.update(existing.id, { ...fields, caption: undefined });
+        await db.entries.update(existing.id, fields); // a replaced photo keeps its caption
       } else {
         await db.entries.add({
           id: newId(),
@@ -82,4 +82,12 @@ export async function setPhoto(
 
 export async function removePhoto(entryId: string): Promise<void> {
   await db.entries.delete(entryId);
+}
+
+export const CAPTION_MAX_LENGTH = 80;
+
+/** Sets a photo's caption; an empty one removes it. */
+export async function updateCaption(entryId: string, caption: string): Promise<void> {
+  const trimmed = caption.trim().slice(0, CAPTION_MAX_LENGTH);
+  await db.entries.update(entryId, { caption: trimmed || undefined });
 }

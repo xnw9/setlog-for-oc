@@ -4,7 +4,14 @@ import { Button, ConfirmDialog, IconButton, PageLayout } from '../../../componen
 import { useDocumentTheme } from '../../../hooks/useDocumentTheme';
 import { addDays, dayLabel } from '../../../lib/days';
 import { currentSlot, formatSlot, slotsFor } from '../../../lib/slots';
-import { clearDay, createNextDay, removePhoto, setPhoto, type DayViewData } from '../api';
+import {
+  clearDay,
+  createNextDay,
+  removePhoto,
+  setPhoto,
+  updateCaption,
+  type DayViewData,
+} from '../api';
 import { MemberRow } from './MemberRow';
 import { SlotList } from './SlotList';
 import { Switcher } from './Switcher';
@@ -127,6 +134,9 @@ export function DayView({ data }: { data: DayViewData }) {
               onPhoto={(file) => setPhoto(day, person.id, slot.startHour, file)}
               onRemove={async () => {
                 if (entry) await removePhoto(entry.id);
+              }}
+              onCaption={async (caption) => {
+                if (entry) await updateCaption(entry.id, caption);
               }}
             />
           );
