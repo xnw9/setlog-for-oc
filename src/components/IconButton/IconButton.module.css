@@ -34,3 +34,8 @@
   background: var(--primary);
   color: var(--primary-text);
 }
+
+/* Links rendered by IconButton (`to`) look the same as the buttons. */
+a.iconButton {
+  text-decoration: none;
+}
