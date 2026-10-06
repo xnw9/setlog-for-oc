@@ -1,13 +1,16 @@
 import { useParams } from 'react-router';
 import { NotFoundPage, PageLayout } from '../../../components';
-import { useLogTheme } from '../../../hooks/useLogTheme';
+import { useDayView } from '../api';
+import { DayView } from '../components/DayView';
 
 export function DayViewPage() {
   const { logId, dayIndex } = useParams();
-  useLogTheme(logId);
-
   // Day indexes are 0, 1, 2… Anything else (e.g. /days/abc) is not a real day.
-  if (!/^\d+$/.test(dayIndex ?? '')) return <NotFoundPage />;
+  const index = /^\d+$/.test(dayIndex ?? '') ? Number(dayIndex) : -1;
+  const data = useDayView(logId, index);
 
-  return <PageLayout title="Day" backTo="/logs" />;
+  if (index < 0 || data === null) return <NotFoundPage backTo="/logs" />;
+  if (data === undefined) return <PageLayout title="" backTo="/logs" />; // loading
+
+  return <DayView key={data.day.id} data={data} />;
 }
