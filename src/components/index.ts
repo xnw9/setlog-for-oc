@@ -6,4 +6,5 @@ export { IconButton } from './IconButton/IconButton';
 export { NotFoundPage } from './NotFoundPage/NotFoundPage';
 export { PageLayout } from './PageLayout/PageLayout';
 export { SegmentedControl, type SegmentOption } from './SegmentedControl/SegmentedControl';
+export { SelectField, type SelectOption } from './SelectField/SelectField';
 export { TextField } from './TextField/TextField';

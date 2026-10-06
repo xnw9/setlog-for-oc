@@ -1,5 +1,5 @@
-import { PageLayout } from '../../../components';
+import { LogForm } from '../components/LogForm';
 
 export function NewLogPage() {
-  return <PageLayout title="New log" backTo="/" />;
+  return <LogForm mode="create" />;
 }
