@@ -132,3 +132,17 @@ export async function deleteLog(logId: string): Promise<void> {
     await db.logs.delete(logId);
   });
 }
+
+/**
+ * The day a log opens on: the latest day with photos, or the first day if there are none.
+ * `undefined` while loading, `null` if the log doesn't exist.
+ */
+export function useOpeningDayIndex(logId: string | undefined): number | null | undefined {
+  return useLiveQuery(async () => {
+    const log = logId ? await db.logs.get(logId) : undefined;
+    if (!log) return null;
+    const entries = await db.entries.where('logId').equals(log.id).toArray();
+    const days = await db.days.bulkGet([...new Set(entries.map((entry) => entry.dayId))]);
+    return Math.max(0, ...days.map((day) => day?.index ?? 0));
+  }, [logId]);
+}
