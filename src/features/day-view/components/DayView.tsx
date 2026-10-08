@@ -62,6 +62,7 @@ export function DayView({ data }: { data: DayViewData }) {
     slotStartHour: startHour,
     members,
     entries,
+    screenAspect: window.innerHeight / window.innerWidth,
   });
 
   // ← / → change slot, unless typing in a field or a dialog is open.
@@ -79,6 +80,7 @@ export function DayView({ data }: { data: DayViewData }) {
 
   return (
     <PageLayout
+      className={log.fitToScreen ? styles.fitPage : undefined}
       title={log.name}
       backTo="/logs"
       actions={
@@ -129,7 +131,7 @@ export function DayView({ data }: { data: DayViewData }) {
       </div>
 
       <ul
-        className={styles.rows}
+        className={[styles.rows, log.fitToScreen && styles.fitRows].filter(Boolean).join(' ')}
         onPointerDown={(event) => (swipeStart.current = { x: event.clientX, y: event.clientY })}
         onPointerUp={(event) => {
           const start = swipeStart.current;
@@ -149,7 +151,7 @@ export function DayView({ data }: { data: DayViewData }) {
               key={person.id}
               person={person}
               entry={entry}
-              imageRatio={log.imageRatio}
+              imageRatio={log.fitToScreen ? undefined : log.imageRatio}
               slotLabel={label(slot.startHour)}
               onPhoto={(file) => setPhoto(day, person.id, slot.startHour, file)}
               onRemove={async () => {

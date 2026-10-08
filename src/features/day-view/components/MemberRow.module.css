@@ -130,3 +130,23 @@
   right: var(--space-2);
   bottom: var(--space-2);
 }
+
+/*
+ * Fit-to-screen: rows share the list's height equally; the frame takes what's left after the
+ * name. Its minimum keeps the centred time label, a caption and the corner buttons inside it;
+ * below that the list scrolls instead.
+ */
+.fill {
+  flex: 1 1 0;
+}
+
+.fill .frame {
+  flex: 1;
+  min-height: 10rem;
+}
+
+/* Out of the flow, so the image's own size can't stretch the frame past its share. */
+.fill .photo {
+  position: absolute;
+  inset: 0;
+}

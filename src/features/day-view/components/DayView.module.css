@@ -28,3 +28,19 @@
 .dayActions > * {
   flex: 1;
 }
+
+/* Fit-to-screen: the page is exactly the screen's height and only the member list scrolls. */
+.fitPage {
+  height: 100dvh;
+  min-height: 0;
+}
+
+.fitPage main {
+  min-height: 0;
+}
+
+.fitRows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}

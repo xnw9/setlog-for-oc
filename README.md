@@ -30,6 +30,8 @@ npm run format     # Prettier (format:check to only check)
 
 - [ ] People: manual crop tool for profile pictures (currently an automatic centre crop)
 - [ ] People: "Discard changes?" on browser Back too (needs a data router for `useBlocker`)
+- [ ] Export: option to match the day view, with the time label and caption overlaid on each photo
+- [ ] Export: apply the colour theme to exported images
 
 ## Plan summary
 

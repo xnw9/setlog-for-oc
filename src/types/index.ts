@@ -34,6 +34,8 @@ export interface Log {
   labelMode: LabelMode;
   /** Shape of every photo row; always landscape. Default '16:9'. */
   imageRatio: ImageRatio;
+  /** Size photos so the whole day view fits the screen; the ratio is then ignored. Default off. */
+  fitToScreen?: boolean;
   theme: ThemeName;
 }
 
