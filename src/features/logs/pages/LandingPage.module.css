@@ -36,3 +36,11 @@
   font-size: 0.875rem;
   color: var(--text-muted);
 }
+
+.version {
+  margin-top: calc(-1 * var(--space-4)); /* sit close under the privacy line */
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
