@@ -1,4 +1,5 @@
 import { Button, Card } from '../../../components';
+import { APP_VERSION } from '../../../version';
 import { useLogCount } from '../api';
 import styles from './LandingPage.module.css';
 
@@ -30,6 +31,7 @@ export function LandingPage() {
       </Card>
 
       <p className={styles.privacy}>Your photos never leave this device.</p>
+      <p className={styles.version}>{APP_VERSION}</p>
     </div>
   );
 }

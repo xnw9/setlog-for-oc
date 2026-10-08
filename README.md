@@ -134,6 +134,10 @@ setlog-for-oc/
 - Tests sit next to the file they test, for example `slots.test.ts` beside `slots.ts`.
 - Code used by only one feature stays in that feature. It moves to `src/components`, `hooks` or `lib` once a second feature needs it.
 
+## Versioning
+
+The landing page shows a friendly version like `v1.0-hello`. It's set by hand in [`src/version.ts`](src/version.ts): bump the number and pick a new word when a major feature lands. (`package.json`'s version isn't shown anywhere.)
+
 ## Commit messages
 
 Use the form `<type>[(scope)]: Summary`, for example `feat(day-view): Add slot switcher`.
