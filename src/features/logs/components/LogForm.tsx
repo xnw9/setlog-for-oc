@@ -42,6 +42,7 @@ interface Draft {
   endHour: number;
   labelMode: LabelMode;
   imageRatio: ImageRatio;
+  fitToScreen: boolean;
   theme: ThemeName;
 }
 
@@ -59,6 +60,7 @@ const newDraft = (): Draft => ({
   endHour: 22,
   labelMode: 'range',
   imageRatio: '16:9',
+  fitToScreen: false,
   theme: 'pastel',
 });
 
@@ -67,6 +69,7 @@ const draftFromLog = ({ log, days }: LogForEdit): Draft => {
   return {
     ...newDraft(),
     ...settings,
+    fitToScreen: log.fitToScreen ?? false,
     startDate: log.dayMode === 'date' ? log.firstDayKey : todayIsoDate(),
     startWeekday: log.dayMode === 'weekday' ? (log.firstDayKey as Weekday) : 'mon',
     dayCount: String(days.length),
@@ -171,6 +174,7 @@ export function LogForm(props: LogFormProps) {
     endHour: draft.endHour,
     labelMode: draft.labelMode,
     imageRatio: draft.imageRatio,
+    fitToScreen: draft.fitToScreen,
     theme: draft.theme,
   });
   const slotStartHours = slots.map((slot) => slot.startHour);
@@ -399,6 +403,14 @@ export function LogForm(props: LogFormProps) {
 
         <Card className={styles.section}>
           <h2 className={styles.heading}>Look</h2>
+          <label className={styles.check}>
+            <input
+              type="checkbox"
+              checked={draft.fitToScreen}
+              onChange={(event) => set('fitToScreen', event.target.checked)}
+            />
+            Keep all photos within the screen
+          </label>
           <SegmentedControl<ImageRatio>
             label="Photo shape"
             options={[
@@ -408,7 +420,9 @@ export function LogForm(props: LogFormProps) {
             ]}
             value={draft.imageRatio}
             onChange={(imageRatio) => set('imageRatio', imageRatio)}
+            disabled={draft.fitToScreen}
           />
+          {draft.fitToScreen && <p className={styles.note}>Photos are sized to fit the screen.</p>}
           <SegmentedControl<ThemeName>
             label="Theme"
             options={[

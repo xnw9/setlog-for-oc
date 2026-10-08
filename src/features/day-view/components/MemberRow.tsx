@@ -9,7 +9,8 @@ interface MemberRowProps {
   person: Person;
   /** This member's photo in the current slot, if any. */
   entry?: Entry;
-  imageRatio: ImageRatio;
+  /** The frame's shape; omit to stretch it to fill the row (the log's "fit to screen" mode). */
+  imageRatio?: ImageRatio;
   /** The current slot, e.g. "10:00–12:00", shown on the frame so it's always visible. */
   slotLabel: string;
   onPhoto: (file: File) => Promise<void>;
@@ -70,13 +71,16 @@ export function MemberRow({
   const chooseFile = () => fileInput.current?.click();
 
   return (
-    <li className={styles.row}>
+    <li className={[styles.row, !imageRatio && styles.fill].filter(Boolean).join(' ')}>
       <div className={styles.who}>
         <Avatar name={person.name} color={person.color} imageBlob={person.avatarBlob} size={32} />
         <span className={styles.name}>{person.name}</span>
       </div>
 
-      <div className={styles.frame} style={{ aspectRatio: imageRatio.replace(':', ' / ') }}>
+      <div
+        className={styles.frame}
+        style={imageRatio ? { aspectRatio: imageRatio.replace(':', ' / ') } : undefined}
+      >
         {entry ? (
           <>
             <img

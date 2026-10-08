@@ -41,3 +41,17 @@
   margin: var(--space-2) 0 0;
   padding-left: var(--space-5);
 }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary);
+}

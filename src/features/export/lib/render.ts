@@ -21,6 +21,8 @@ export interface SlotImageInput {
   members: Person[];
   /** The day's pictures (any slot); only this slot's are drawn. */
   entries: Entry[];
+  /** Screen height ÷ width. For fit-to-screen logs the image takes this shape at its width. */
+  screenAspect?: number;
 }
 
 export interface RenderedImage {
@@ -53,6 +55,8 @@ const BASE = {
   captionGap: 16,
   rowGap: 48,
   emptyText: 32,
+  /** Fit-to-screen: photos never get shorter than this; the image grows longer instead. */
+  minFitPhoto: 160,
 };
 
 interface Row {
@@ -89,7 +93,7 @@ function layout(input: SlotImageInput, options: ExportOptions, width: number) {
   const size = (key: keyof typeof BASE) => BASE[key] * s;
   const [rw, rh] = input.log.imageRatio.split(':').map(Number);
   const photoWidth = width - 2 * size('pad');
-  const photoHeight = (photoWidth * rh) / rw;
+  let photoHeight = (photoWidth * rh) / rw;
 
   const measure = document.createElement('canvas').getContext('2d')!;
 
@@ -112,14 +116,26 @@ function layout(input: SlotImageInput, options: ExportOptions, width: number) {
     return [{ person, entry, captionLines }];
   });
 
-  const rowHeight = (row: Row) =>
-    size('avatar') +
-    size('nameGap') +
-    photoHeight +
-    (row.captionLines.length
-      ? size('captionGap') + row.captionLines.length * size('captionLine')
-      : 0);
   const headerHeight = stacked ? 2 * size('title') + size('headerGap') / 2 : size('title');
+  const captionHeight = (row: Row) =>
+    row.captionLines.length
+      ? size('captionGap') + row.captionLines.length * size('captionLine')
+      : 0;
+
+  // Fit-to-screen: the image is the screen's shape, and photos share the height left over.
+  if (input.log.fitToScreen && input.screenAspect && rows.length > 0) {
+    const fixed =
+      2 * size('pad') +
+      headerHeight +
+      size('afterHeader') +
+      rows.reduce((sum, row) => sum + size('avatar') + size('nameGap') + captionHeight(row), 0) +
+      (rows.length - 1) * size('rowGap');
+    const share = (width * input.screenAspect - fixed) / rows.length;
+    photoHeight = Math.max(size('minFitPhoto'), share);
+  }
+
+  const rowHeight = (row: Row) =>
+    size('avatar') + size('nameGap') + photoHeight + captionHeight(row);
   const height = Math.ceil(
     2 * size('pad') +
       headerHeight +

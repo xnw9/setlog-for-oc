@@ -13,13 +13,22 @@ interface PageLayoutProps {
   onBack?: (event: MouseEvent<HTMLAnchorElement>) => void;
   /** Buttons at the right of the header, e.g. a settings link. */
   actions?: ReactNode;
+  /** Extra class on the page, e.g. to fix its height. */
+  className?: string;
   children?: ReactNode;
 }
 
 /** Page shell: header with optional back button and title, then the page content. */
-export function PageLayout({ title, backTo, onBack, actions, children }: PageLayoutProps) {
+export function PageLayout({
+  title,
+  backTo,
+  onBack,
+  actions,
+  className,
+  children,
+}: PageLayoutProps) {
   return (
-    <div className={styles.page}>
+    <div className={[styles.page, className].filter(Boolean).join(' ')}>
       <header className={styles.header}>
         {backTo && (
           <Button
