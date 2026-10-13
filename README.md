@@ -219,11 +219,6 @@ How changes are made here, for anyone (or any Claude Code session, on any comput
 
 **Lint while a nested worktree exists:** `npm run lint` fails if `.claude/worktrees/` is present (see [Scaffold to-do](#scaffold-to-do)). Use `npx eslint src` until it's fixed.
 
-**Moving to another computer**
-- **Code:** clone the repo and run `npm install`. The commit-message hook comes with it.
-- **App data:** logs, people and photos live in that browser's IndexedDB and don't move between devices. There's no backup and restore yet.
-- **Claude Code history:** conversations and saved notes live locally in `~/.claude/projects/<folder-named-after-the-repo-path>/`. To resume one with `claude --resume`, copy that folder across and clone the repo to the same path. Otherwise, start a fresh session: this README holds the plan, the to-do lists and these conventions.
-
 ## Tech stack
 
 **App:** Vite + React + TypeScript.
