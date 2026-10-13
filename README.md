@@ -2,7 +2,8 @@
 
 A local-only photo log of a group's day, inspired by [Setlog](https://apps.apple.com/app/id6587576438). It is a public static website. **Everything stays in your browser, and your photos never leave your device.**
 
-> Status: scaffold in progress. The database, shared components, themes and routes are in place, and the pages are still blank.
+> Status: in progress. People, logs, day view, photos, captions, comments and export are built.
+> Backup and restore, the PWA and offline support are still to come.
 
 ## Running locally
 
@@ -19,19 +20,74 @@ npm run format     # Prettier (format:check to only check)
 
 ## Scaffold to-do
 
-- [ ] Tests: Vitest + React Testing Library, with a landing-page smoke test
+- [ ] Tests: Vitest + React Testing Library — unit tests for the pure modules (`slots`, `days`,
+      `removals`, `fileName`, the export crop maths) plus a landing-page smoke test
 - [x] Database: Dexie schema, persistent-storage request, live queries
 - [x] Add `logId` to `Entry`, so the "log has pictures" lock check is a single query
 - [x] Per-log themes (pastel, mint, peach, lavender), each in light and dark
 - [x] Shared components: TextField, SegmentedControl, IconButton, Avatar, ConfirmDialog
-- [ ] CI: GitHub Actions running type-check, lint, tests and build
+- [ ] CI: GitHub Actions running type-check, lint, format check, tests and build — on pull
+      requests as well as pushes to `main`. Today only the deploy runs, so PRs merge unchecked
+- [ ] Ignore `.claude/worktrees/` in `.gitignore` and in `eslint.config.js`, and set
+      `tsconfigRootDir` — a nested worktree currently breaks `npm run lint` entirely
 
 ## Feature to-do
 
 - [ ] People: manual crop tool for profile pictures (currently an automatic centre crop)
 - [ ] People: "Discard changes?" on browser Back too (needs a data router for `useBlocker`)
 - [ ] Export: option to match the day view, with the time label and caption overlaid on each photo
-- [ ] Export: apply the colour theme to exported images
+- [x] Export: apply the colour theme to exported images
+- [ ] Log settings: when a member is removed, warn about their comments as well as their
+      photos, and delete both on confirm. Photos are already covered; comments they wrote on
+      *other* members' photos are neither counted nor deleted, so they survive hidden and
+      reappear if the person is re-added (see the note below)
+
+### Removing a member: implementation note
+
+The gap is narrower than it looks. A removed member's own photos already go, and any comment on
+them goes with the row; what survives is comments they *wrote on photos that are being kept*.
+
+That is awkward today because `picturesToRemove` works on `EntryRef` (`dayId`, `personId`,
+`slotStartHour`), read from the index by `entryRefsForLog` so that no image blobs are loaded.
+`EntryRef` can't see comment authorship at all, so counting comments for the warning would mean
+loading every row in the log — exactly what that code avoids.
+
+The cheap way out is a schema v4 index on the nested keypath `comment.personId`:
+
+```js
+this.version(4).stores({
+  entries: 'id, logId, dayId, personId, comment.personId, &[dayId+personId+slotStartHour]',
+});
+```
+
+Dexie indexes dotted keypaths and skips rows where the path is absent, so the index holds only
+commented entries. `db.entries.where('comment.personId').anyOf(removedIds).primaryKeys()` then
+gives the affected entries for both the warning count and the cascade, still without touching a
+blob. Clearing one is an `update(id, { comment: undefined })` on a kept row, not a row delete, so
+it wants its own return field rather than being folded into `Removal[]` — something like
+`picturesToRemove` becoming `removalsFor(): { pictures: Removal[]; comments: CommentRemoval[] }`,
+with the `LogForm` dialog title covering both instead of only `Delete N pictures?`.
+
+## Code health to-do
+
+- [ ] Errors: show a message when a database write fails. `LogForm.save()` and `PersonForm.save()`
+      set `saving` and never catch, so a failed write disables Save for good
+- [ ] Errors: `deletePerson`'s "This person is still in a log." is thrown but never caught — it
+      becomes an unhandled rejection instead of reaching the user
+- [ ] Errors: tell a full quota apart from a bad file. `MemberRow` reports every `setPhoto` failure
+      as "Couldn't read that image", including `QuotaExceededError`
+- [ ] Export: await `document.fonts.ready` before measuring and drawing, so the first export
+      doesn't use fallback metrics once the font files land in `src/styles/fonts/`
+- [ ] Day view: give the arrow-key `useEffect` a dependency array, and track open dialogs in state
+      rather than with `document.querySelector('dialog[open]')`
+- [ ] Shared helpers: one `plural()` (three copies), one name collator (two), one `toBlob` promise
+      wrapper (three), and one theme list derived from `ThemeName` (hardcoded in four places)
+- [ ] Queries: `useLogSummaries` and `useOpeningDayIndex` are N+1 and re-run on every database
+      change, so each photo upload triggers a full re-scan
+- [ ] Settings: guard `slots[0]` in the slot preview — `slotsFor` returns `[]` when the span is
+      shorter than the slot length
+- [ ] Narrow `setPhoto`'s `ConstraintError` catch so it can't also swallow a real invariant break
+- [ ] Versioning: one source of truth for `src/version.ts` and `package.json`
 
 ## Plan summary
 
