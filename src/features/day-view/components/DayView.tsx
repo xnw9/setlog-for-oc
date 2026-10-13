@@ -8,7 +8,9 @@ import { currentSlot, formatSlot, slotsFor } from '../../../lib/slots';
 import {
   clearDay,
   createNextDay,
+  removeComment,
   removePhoto,
+  setComment,
   setPhoto,
   updateCaption,
   type DayViewData,
@@ -151,6 +153,7 @@ export function DayView({ data }: { data: DayViewData }) {
               key={person.id}
               person={person}
               entry={entry}
+              members={members}
               imageRatio={log.fitToScreen ? undefined : log.imageRatio}
               slotLabel={label(slot.startHour)}
               onPhoto={(file) => setPhoto(day, person.id, slot.startHour, file)}
@@ -159,6 +162,12 @@ export function DayView({ data }: { data: DayViewData }) {
               }}
               onCaption={async (caption) => {
                 if (entry) await updateCaption(entry.id, caption);
+              }}
+              onComment={async (personId, text) => {
+                if (entry) await setComment(entry.id, personId, text);
+              }}
+              onRemoveComment={async () => {
+                if (entry) await removeComment(entry.id);
               }}
             />
           );

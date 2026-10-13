@@ -1,14 +1,17 @@
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useRef, useState } from 'react';
 import { Avatar, ConfirmDialog, IconButton } from '../../../components';
 import { useBlobImage } from '../../../hooks/useBlobImage';
 import type { Entry, ImageRatio, Person } from '../../../types';
-import { CAPTION_MAX_LENGTH } from '../api';
+import { InlineEdit } from './InlineEdit';
+import { PersonPicker } from './PersonPicker';
 import styles from './MemberRow.module.css';
 
 interface MemberRowProps {
   person: Person;
   /** This member's photo in the current slot, if any. */
   entry?: Entry;
+  /** The log's members, who can comment on the photo. */
+  members: Person[];
   /** The frame's shape; omit to stretch it to fill the row (the log's "fit to screen" mode). */
   imageRatio?: ImageRatio;
   /** The current slot, e.g. "10:00–12:00", shown on the frame so it's always visible. */
@@ -17,43 +20,36 @@ interface MemberRowProps {
   onRemove: () => Promise<void>;
   /** Saves the caption; an empty string removes it. */
   onCaption: (caption: string) => Promise<void>;
+  /** Saves who commented and what they said. */
+  onComment: (personId: string, text: string) => Promise<void>;
+  onRemoveComment: () => Promise<void>;
 }
 
 /** One member in the current slot: name, then their photo in the log's ratio, labelled with the slot. */
 export function MemberRow({
   person,
   entry,
+  members,
   imageRatio,
   slotLabel,
   onPhoto,
   onRemove,
   onCaption,
+  onComment,
+  onRemoveComment,
 }: MemberRowProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   const imageRef = useBlobImage(entry?.imageBlob);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [confirmRemove, setConfirmRemove] = useState(false);
-  /** The caption being typed, or undefined when not editing. */
-  const [captionDraft, setCaptionDraft] = useState<string>();
-  const cancelledEdit = useRef(false);
+  const [editingCaption, setEditingCaption] = useState(false);
+  const [editingComment, setEditingComment] = useState(false);
+  const [pickingCommenter, setPickingCommenter] = useState(false);
 
-  function finishCaption() {
-    if (captionDraft === undefined) return;
-    if (!cancelledEdit.current && captionDraft.trim() !== (entry?.caption ?? '')) {
-      void onCaption(captionDraft);
-    }
-    cancelledEdit.current = false;
-    setCaptionDraft(undefined);
-  }
-
-  function onCaptionKey(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter') event.currentTarget.blur(); // blur saves
-    if (event.key === 'Escape') {
-      cancelledEdit.current = true;
-      event.currentTarget.blur();
-    }
-  }
+  // A comment by someone who's no longer a member shows as no comment.
+  const commenter = members.find((member) => member.id === entry?.comment?.personId);
+  const comment = commenter && entry?.comment;
 
   async function pick(file: File | undefined) {
     if (!file) return;
@@ -96,17 +92,14 @@ export function MemberRow({
             />
             <div className={styles.labels}>
               <span className={styles.badge}>{slotLabel}</span>
-              {captionDraft !== undefined ? (
-                <input
+              {editingCaption ? (
+                <InlineEdit
                   className={`${styles.badge} ${styles.captionInput}`}
                   aria-label={`Caption for ${person.name}'s photo`}
-                  value={captionDraft}
-                  maxLength={CAPTION_MAX_LENGTH}
                   placeholder="Add a caption"
-                  autoFocus
-                  onChange={(event) => setCaptionDraft(event.target.value)}
-                  onKeyDown={onCaptionKey}
-                  onBlur={finishCaption}
+                  initial={entry.caption ?? ''}
+                  onSave={(caption) => void onCaption(caption)}
+                  onDone={() => setEditingCaption(false)}
                 />
               ) : (
                 entry.caption && (
@@ -132,12 +125,62 @@ export function MemberRow({
                 ✕
               </IconButton>
             </div>
+
+            {/* Bottom-left: 💬, or the commenter's avatar and what they said. */}
+            <div className={styles.comment}>
+              {comment ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.commenter}
+                    aria-label={`Comment by ${commenter.name}. Change who's commenting`}
+                    onClick={() => setPickingCommenter(true)}
+                  >
+                    <Avatar
+                      name={commenter.name}
+                      color={commenter.color}
+                      imageBlob={commenter.avatarBlob}
+                      size={40}
+                    />
+                  </button>
+                  {editingComment ? (
+                    <InlineEdit
+                      className={`${styles.badge} ${styles.commentInput}`}
+                      aria-label={`${commenter.name}'s comment on ${person.name}'s photo`}
+                      placeholder="Add a comment"
+                      initial={comment.text}
+                      onSave={(text) => void onComment(commenter.id, text)}
+                      onDone={() => setEditingComment(false)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${styles.badge} ${styles.commentText}`}
+                      aria-label={`Edit ${commenter.name}'s comment`}
+                      onClick={() => setEditingComment(true)}
+                    >
+                      {comment.text || <span className={styles.placeholder}>Add a comment</span>}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <IconButton
+                  variant="filled"
+                  aria-label={`Comment on ${person.name}'s photo`}
+                  onClick={() => setPickingCommenter(true)}
+                  disabled={busy}
+                >
+                  💬
+                </IconButton>
+              )}
+            </div>
+
             <IconButton
               variant="filled"
               className={styles.captionButton}
               aria-label={`${entry.caption ? 'Edit' : 'Add'} caption for ${person.name}'s photo`}
-              onClick={() => setCaptionDraft(entry.caption ?? '')}
-              disabled={busy || captionDraft !== undefined}
+              onClick={() => setEditingCaption(true)}
+              disabled={busy || editingCaption}
             >
               ✎
             </IconButton>
@@ -171,6 +214,28 @@ export function MemberRow({
           event.target.value = ''; // allow picking the same file again
         }}
       />
+
+      {pickingCommenter && (
+        <PersonPicker
+          title="Who's commenting?"
+          people={members}
+          selectedId={comment ? commenter.id : undefined}
+          onPick={async (personId) => {
+            setPickingCommenter(false);
+            await onComment(personId, comment ? comment.text : '');
+            setEditingComment(true); // straight on to writing the comment
+          }}
+          onRemove={
+            comment
+              ? async () => {
+                  setPickingCommenter(false);
+                  await onRemoveComment();
+                }
+              : undefined
+          }
+          onClose={() => setPickingCommenter(false)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmRemove}

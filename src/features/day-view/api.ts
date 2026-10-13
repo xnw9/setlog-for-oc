@@ -91,3 +91,14 @@ export async function updateCaption(entryId: string, caption: string): Promise<v
   const trimmed = caption.trim().slice(0, CAPTION_MAX_LENGTH);
   await db.entries.update(entryId, { caption: trimmed || undefined });
 }
+
+/** Sets who commented on a photo and what they said (trimmed, capped like captions). */
+export async function setComment(entryId: string, personId: string, text: string): Promise<void> {
+  await db.entries.update(entryId, {
+    comment: { personId, text: text.trim().slice(0, CAPTION_MAX_LENGTH) },
+  });
+}
+
+export async function removeComment(entryId: string): Promise<void> {
+  await db.entries.update(entryId, { comment: undefined });
+}
