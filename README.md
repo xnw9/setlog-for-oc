@@ -205,6 +205,20 @@ Use the form `<type>[(scope)]: Summary`, for example `feat(day-view): Add slot s
 
 Claude Code enforces this through a hook in `.claude/settings.json` that runs `.claude/hooks/check-commit-msg.mjs`. It needs Node installed and nothing else. It only checks commits Claude makes, not commits typed in your own terminal.
 
+## Working on this project
+
+How changes are made here, for anyone (or any Claude Code session, on any computer) picking it up.
+
+**Workflow**
+1. Pull the latest `main` and branch from it: `feature-<name>`, `docs-<name>`, `ci-<name>`.
+2. **Plan first.** Write a short plan with any open decisions, and wait for approval before changing code.
+3. Build it, then check it: `npx tsc`, `npx eslint src`, `npm run format:check` and `npm run build`. Also run through the change in a browser.
+4. Summarise what changed and propose the commits. **Commit and push only when asked.**
+5. Keep commits small and split by step, and make sure each one type-checks and lints on its own. Messages follow [Commit messages](#commit-messages).
+6. Open a pull request into `main`. If the GitHub CLI isn't installed, use the compare page: `https://github.com/xnw9/setlog-for-oc/compare/main...<branch>`.
+
+**Lint while a nested worktree exists:** `npm run lint` fails if `.claude/worktrees/` is present (see [Scaffold to-do](#scaffold-to-do)). Use `npx eslint src` until it's fixed.
+
 ## Tech stack
 
 **App:** Vite + React + TypeScript.
