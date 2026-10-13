@@ -65,6 +65,14 @@ interface Row {
   captionLines: string[];
 }
 
+/** Shortens `text` with "…" until it fits `maxWidth`. */
+function ellipsize(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let cut = text;
+  while (cut && ctx.measureText(`${cut}…`).width > maxWidth) cut = cut.slice(0, -1);
+  return `${cut.trimEnd()}…`;
+}
+
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const lines: string[] = [];
   let line = '';
@@ -202,6 +210,51 @@ async function drawAvatar(
 }
 
 /**
+ * Overlays a photo's comment in its bottom-left corner, like the day view: the commenter's avatar,
+ * then the text in a dark pill. Skipped if the commenter is no longer a member.
+ */
+async function drawComment(
+  ctx: CanvasRenderingContext2D,
+  entry: Entry,
+  members: Person[],
+  box: { x: number; y: number; w: number; h: number },
+  s: number,
+) {
+  const commenter = members.find((member) => member.id === entry.comment?.personId);
+  if (!commenter || !entry.comment) return;
+  const inset = 16 * s;
+  const d = 56 * s;
+  const x = box.x + inset;
+  const y = box.y + box.h - inset - d;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x + d / 2, y + d / 2, d / 2 + 3 * s, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff'; // white ring, as in the day view
+  ctx.fill();
+  ctx.restore();
+  await drawAvatar(ctx, commenter, x, y, d);
+
+  const text = entry.comment.text;
+  if (!text) return;
+  ctx.font = `600 ${30 * s}px ${FONT}`;
+  const padX = 20 * s;
+  const left = x + d + 12 * s;
+  const shown = ellipsize(ctx, text, box.x + box.w - inset - left - 2 * padX);
+  const pillWidth = ctx.measureText(shown).width + 2 * padX;
+  const pillHeight = 48 * s;
+  const pillTop = y + (d - pillHeight) / 2;
+  ctx.fillStyle = 'rgb(30 20 40 / 0.6)';
+  ctx.beginPath();
+  ctx.roundRect(left, pillTop, pillWidth, pillHeight, pillHeight / 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(shown, left + padX, pillTop + pillHeight / 2);
+}
+
+/**
  * Draws one slot as an image: header (log, day, slot), then each member's name and photo in the
  * log's ratio, with captions below. Height grows with the members; if the image would pass the
  * browser's canvas limit, the width is lowered until it fits.
@@ -274,6 +327,7 @@ export async function renderSlot(
       const bitmap = await createImageBitmap(row.entry.imageBlob);
       drawCover(ctx, bitmap, box, row.entry.crop);
       bitmap.close();
+      await drawComment(ctx, row.entry, input.members, box, plan.s);
     } else {
       ctx.fillStyle = palette.surface;
       ctx.fill();

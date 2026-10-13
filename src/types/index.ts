@@ -66,4 +66,6 @@ export interface Entry {
   height: number;
   crop: Crop;
   caption?: string;
+  /** One member's comment on this photo; text may be empty while it's being written. */
+  comment?: { personId: string; text: string };
 }
