@@ -35,7 +35,6 @@ npm run format     # Prettier (format:check to only check)
 
 - [ ] People: manual crop tool for profile pictures (currently an automatic centre crop)
 - [ ] People: "Discard changes?" on browser Back too (needs a data router for `useBlocker`)
-- [ ] Export: option to match the day view, with the time label and caption overlaid on each photo
 - [x] Export: apply the colour theme to exported images
 - [ ] Log settings: when a member is removed, warn about their comments as well as their
       photos, and delete both on confirm. Photos are already covered; comments they wrote on
@@ -80,8 +79,8 @@ with the `LogForm` dialog title covering both instead of only `Delete N pictures
       doesn't use fallback metrics once the font files land in `src/styles/fonts/`
 - [ ] Day view: give the arrow-key `useEffect` a dependency array, and track open dialogs in state
       rather than with `document.querySelector('dialog[open]')`
-- [ ] Shared helpers: one `plural()` (three copies), one name collator (two), one `toBlob` promise
-      wrapper (three), and one theme list derived from `ThemeName` (hardcoded in four places)
+- [ ] Shared helpers: one `plural()` (four copies), one name collator (two), one `toBlob` promise
+      wrapper (three), and one theme list derived from `ThemeName` (hardcoded in two places)
 - [ ] Queries: `useLogSummaries` and `useOpeningDayIndex` are N+1 and re-run on every database
       change, so each photo upload triggers a full re-scan
 - [ ] Settings: guard `slots[0]` in the slot preview — `slotsFor` returns `[]` when the span is
@@ -130,10 +129,11 @@ Entries are keyed by clock hour, so changing the start or end hour never moves p
 - **Editing a photo:** crop by setting a focal point and zoom, framed to the image ratio, and add a caption.
 
 ### Export
-The export is drawn on a canvas and matches the day view.
-- **Contents:** a header with the log name, day and slot, then each member's photo with their name and caption.
+The export is drawn on a canvas and always matches the day view; there is no other layout.
+- **Contents:** a header with the log name and day, then every member's avatar, name and frame, as in the day view: the time label just above the middle of each frame in glowing white text, the caption below it, and the comment in a pill in the bottom-left corner. Members without a photo show an empty frame with the time label at the same height.
+- **Theme:** the log's own theme, in its light colours.
 - **Image height:** the image always grows to fit every member, so there's no shrinking or splitting.
-- **Options:** show avatars or not, PNG or JPEG, 1080 or 2160 px wide, theme, and whether to show empty members.
+- **Options:** only the file: PNG or JPEG, and 1080 or 2160 px wide.
 - **Large exports:** if an image would be too big for the browser to draw, its width drops automatically and the user is told.
 - **File names:** `MyLog_2026-09-30_0800.png` or `MyLog_Monday-2_0800.png`.
 - **Export slot:** saves one image.

@@ -24,6 +24,8 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   border: 1px solid var(--border);
+  --caption-line: calc(1rem * 1.5 + 2 * var(--space-1));
+  --label-gap: var(--space-2);
 }
 
 .photo {
@@ -34,16 +36,16 @@
 }
 
 /*
- * Time label exactly in the middle (where an empty frame shows it, so it never moves); the caption
- * hangs below it. Rows: space, label, space; the caption sits at the top of the last row.
+ * The time label and one caption line are centred together, caption or not, so the label never
+ * moves; a longer caption grows downwards. Mirrored by drawLabels in export/lib/render.ts.
  */
 .labels {
   position: absolute;
   inset: var(--space-6) var(--space-4);
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
+  grid-template-rows: 1fr auto var(--caption-line) 1fr;
   justify-items: center;
-  row-gap: var(--space-2);
+  row-gap: var(--label-gap);
   pointer-events: none;
 }
 
@@ -56,15 +58,27 @@
   align-self: start;
 }
 
-.badge {
+/* Kept in step with export/lib/render.ts. */
+.photoText {
   max-width: 100%;
   padding: var(--space-1) var(--space-4);
   border-radius: var(--radius-pill);
-  background: rgb(30 20 40 / 0.6);
   color: #ffffff;
   font-size: 1.125rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.pill {
+  background: rgb(30 20 40 / 0.4);
+}
+
+.glow {
+  text-shadow:
+    0 0 1px rgb(46 26 71 / 0.6),
+    0 1px 2px rgb(46 26 71 / 0.5),
+    0 0 6px rgb(46 26 71 / 0.45),
+    0 0 14px rgb(46 26 71 / 0.3);
 }
 
 .caption {
@@ -104,6 +118,7 @@
 .add {
   width: 100%;
   height: 100%;
+  padding: 0 0 calc(var(--label-gap) + var(--caption-line)); /* the label sits as on a photo */
   border: 2px dashed var(--border);
   border-radius: inherit;
   background: transparent;

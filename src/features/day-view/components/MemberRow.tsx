@@ -91,10 +91,10 @@ export function MemberRow({
               }}
             />
             <div className={styles.labels}>
-              <span className={styles.badge}>{slotLabel}</span>
+              <span className={`${styles.photoText} ${styles.glow}`}>{slotLabel}</span>
               {editingCaption ? (
                 <InlineEdit
-                  className={`${styles.badge} ${styles.captionInput}`}
+                  className={`${styles.photoText} ${styles.pill} ${styles.captionInput}`}
                   aria-label={`Caption for ${person.name}'s photo`}
                   placeholder="Add a caption"
                   initial={entry.caption ?? ''}
@@ -103,7 +103,9 @@ export function MemberRow({
                 />
               ) : (
                 entry.caption && (
-                  <span className={`${styles.badge} ${styles.caption}`}>{entry.caption}</span>
+                  <span className={`${styles.photoText} ${styles.glow} ${styles.caption}`}>
+                    {entry.caption}
+                  </span>
                 )
               )}
             </div>
@@ -145,7 +147,7 @@ export function MemberRow({
                   </button>
                   {editingComment ? (
                     <InlineEdit
-                      className={`${styles.badge} ${styles.commentInput}`}
+                      className={`${styles.photoText} ${styles.pill} ${styles.commentInput}`}
                       aria-label={`${commenter.name}'s comment on ${person.name}'s photo`}
                       placeholder="Add a comment"
                       initial={comment.text}
@@ -155,7 +157,7 @@ export function MemberRow({
                   ) : (
                     <button
                       type="button"
-                      className={`${styles.badge} ${styles.commentText}`}
+                      className={`${styles.photoText} ${styles.pill} ${styles.commentText}`}
                       aria-label={`Edit ${commenter.name}'s comment`}
                       onClick={() => setEditingComment(true)}
                     >

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button, SegmentedControl } from '../../../components';
-import type { Log, ThemeName } from '../../../types';
+import type { Log } from '../../../types';
 import { useExportOptions } from '../hooks/useExportOptions';
 import { exportFileName } from '../lib/fileName';
 import { renderSlot, type ExportOptions, type SlotImageInput } from '../lib/render';
@@ -91,22 +91,6 @@ export function ExportDialog({ title, log, slots, onClose }: ExportDialogProps) 
 
       {(state.step === 'options' || state.step === 'rendering') && (
         <fieldset className={styles.options} disabled={busy}>
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={options.showAvatars}
-              onChange={(event) => set('showAvatars', event.target.checked)}
-            />
-            Show avatars
-          </label>
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={options.showEmpty}
-              onChange={(event) => set('showEmpty', event.target.checked)}
-            />
-            Show members without a photo
-          </label>
           <SegmentedControl<ExportOptions['format']>
             label="Format"
             options={[
@@ -124,17 +108,6 @@ export function ExportDialog({ title, log, slots, onClose }: ExportDialogProps) 
             ]}
             value={options.width}
             onChange={(width) => set('width', width)}
-          />
-          <SegmentedControl<ThemeName>
-            label="Theme"
-            options={[
-              { value: 'pastel', label: 'Pastel' },
-              { value: 'mint', label: 'Mint' },
-              { value: 'peach', label: 'Peach' },
-              { value: 'lavender', label: 'Lavender' },
-            ]}
-            value={options.theme}
-            onChange={(theme) => set('theme', theme)}
           />
         </fieldset>
       )}
